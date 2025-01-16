@@ -10,7 +10,7 @@ Agent-based model simulating urban growth patterns in Lyon using Copernicus Urba
 
 `/includes/urban_growth/2012/`
 - `Lyon_rasterized_100m_2012.asc` - Rasterized land use (100m resolution)
-- `Lyon_rasterized_30m_2012.asc` - Rasterized land use (30m resolution)
+- `Lyon_rasterized_30m_2012.asc` - Rasterized land use (30m resolution, very slow to load)
 - `Lyon_2012_Roads_Rivers_Simplified.shp` - Simplified transportation network
 
 ### Land Use Classes
