@@ -4,7 +4,7 @@ Agent-based model simulating urban growth patterns in Lyon using Copernicus Urba
 
 ## Data Source
 
-- **Land Use Data**: Urban Atlas 2012 (Copernicus Land Monitoring Service)
+- **Land Use Data**: [Urban Atlas 2012 & 2018](https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2018) (Copernicus Land Monitoring Service)
 
 ## Preprocessed Datasets
 
@@ -43,6 +43,10 @@ Classes implemented in simulation from the dataset codes:
       - Tolerance: 100m
    3. Export as shapefile
    ```
+
+## Snapshot
+
+![snapshot_time_step_0_30m_res](snapshots/LyonUrbanGrowth_model_display_map_cycle_0_time_1737039272231.png)
 
 ## GAMA Model Structure
 
