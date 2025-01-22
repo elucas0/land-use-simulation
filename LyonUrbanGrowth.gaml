@@ -7,107 +7,61 @@
 model LyonUrbanGrowth
 
 global {
-	int urban_area_count <- 0;
-	int green_area_count <- 0;
-	int industrial_area_count <- 0;
-	int agricultural_area_count <- 0;
-
 	//File for the ascii grid
-	file asc_grid <- grid_file("../includes/urban_growth/2012/Lyon_rasterized_100m_2012.asc");
+	file asc_grid <- grid_file("../includes/urban_growth/2012/Full_Lyon_rasterized_100m_2012.asc");
 	//Shapefile for the road
-	file road_shapefile <- shape_file("../includes/urban_growth/2012/Lyon_2012_Roads_Rivers_Simplified.shp");
-	//Shapefile for the city
-	file city_center_shapefile <- shape_file("../includes/urban_growth/city center.shp");
+	file road_shapefile <- shape_file("../includes/urban_growth/2012/Full_Lyon_2012_roads_simplified.shp");
 	//Shape of the environment
 	geometry shape <- envelope(asc_grid);
 	//Graph of the roads
 	graph roads_network;
 
-	// Dynamic list of the cells to consider at each cycle
-	list<plot> empty_plots <- plot where (each.grid_value = 0.0) update: shuffle(plot where (each.grid_value = 0.0));
-	list<rgb> plot_colors <- [#lightgray, //empty
-	#orange, // 1 built
-	#blue // 2 River-lake
-];
-	//Radius of density
-	int density_radius <- 4;
-	//Weight of density
-	float weight_density <- 0.05;
-	//Weight of the road distance
-	float weight_road_dist <- 0.5;
-	//Weight of the city center distance
-	float weight_cc_dist <- 0.3;
-	//Number of plot allowing to build a building
-	int nb_plots_to_build <- 195;
+	// Lists of class codes
+	list<float> urban_codes <- [11100.0, 11210.0, 11220.0, 11230.0, 11240.0];
+	list<float> green_urban_codes <- [14100.0, 14200.0];
+	list<float> agricultural_codes <- [21000.0, 22000.0, 23000.0, 24000.0, 25000.0];
+	list<float> natural_codes <- [31000.0, 32000.0, 33000.0];
+
+	//Suitable cells list
+	list<plot> suitable_plots <- plot where (each.grid_value in green_urban_codes or each.grid_value in agricultural_codes or each.grid_value in natural_codes);
+
+	// Transition probabilities
+	float urban_expansion_rate <- 0.2;
+	float road_influence_distance <- 100.0;
+	int neighborhood_radius <- 1;
+
+	// Statistics variables
+	int urban_cells <- 0 update: plot count (each.grid_value in urban_codes);
+	int green_cells <- 0 update: plot count (each.grid_value in green_urban_codes);
+	int agricultural_cells <- 0 update: plot count (each.grid_value in agricultural_codes);
+	int natural_cells <- 0 update: plot count (each.grid_value in natural_codes);
+
+	// Track transitions
+	int cycle_urban_transitions <- 0 update: 0;
 
 	init {
 	//Creation of the roads using the shapefile of the road
 		create roads from: road_shapefile;
 		//Creation of the city center using the city center shapefile
-		create city_center from: city_center_shapefile;
 		//Creation of the graph of the road network
 		roads_network <- as_edge_graph(roads);
-
-		//Each road has to compute its distance from the city center
-		ask roads {
-			do compute_cc_dist;
-		}
-		//Compute the city distance for each plot
-		ask empty_plots {
-			do compute_distances;
-		}
-		//Normalization of the distance
-		do normalize_distances;
-	}
-	//Action to normalize the distance
-	action normalize_distances {
-	//Maximum distance from the road of all the plots
-		float max_road_dist <- empty_plots max_of each.dist_route;
-		//Maximum distance from the city center for all the plots
-		float max_cc_dist <- empty_plots max_of each.dist_cv;
-		//Normalization of  each empty plot according to the maximal value of each attribute
-		ask empty_plots {
-			dist_cv <- 1 - dist_cv / max_cc_dist;
-			dist_route <- 1 - dist_route / max_road_dist;
-		}
-
 	}
 
-	//Reflex representing the global dynamic of the model
-	reflex dynamique_globale when: weight_density != 0 or weight_road_dist != 0 or weight_cc_dist != 0 {
-	//Ask to each empty plot to compute its constructability
-		ask empty_plots {
-			constructability <- compute_constructability();
-		}
+	reflex update_transition_count {
+		cycle_urban_transitions <- plot count (each.transitioned_this_cycle);
+	}
 
-		list<plot> ordered_plots <- empty_plots sort_by (each.constructability);
-		ordered_plots <- nb_plots_to_build last ordered_plots;
-		//Build on each empty plot having the highest constructability
-		ask ordered_plots {
-			do build;
+	reflex land_use_transition {
+		ask suitable_plots {
+			do compute_transition;
 		}
 
 	}
 
 }
 
-species city_center {
-
-	aspect default {
-		draw circle(300) color: #cyan;
-	}
-
-}
 //Species representing the roads
 species roads {
-	float dist_cv;
-	//Action to compute the city center distance for the road
-	action compute_cc_dist {
-		using topology(roads_network) {
-			dist_cv <- self distance_to first(city_center);
-		}
-
-	}
 
 	aspect default {
 		draw shape color: #black;
@@ -115,79 +69,102 @@ species roads {
 
 }
 
-grid land {
-	string type <- "empty" among: ["empty", "urban", "green", "industrial", "agricultural", "road"];
-}
-
-grid plot file: asc_grid use_individual_shapes: false use_regular_agents: false neighbors: 4 {
+grid plot file: asc_grid use_individual_shapes: false use_regular_agents: false {
+	float transition_probability <- 0.0;
+	bool transitioned_this_cycle <- false;
 	rgb color <- get_color(grid_value);
 	rgb get_color (float val) {
 		switch (val) {
-			match_one [float(11100), float(11210), float(11220), float(11230), float(11240)] {
+			match_one urban_codes {
 				return #red;
-			} // Industrial/commercial units
+			}
+
 			match float(12100) {
 				return #purple;
-			} // Industrial/commercial units
-			match_one [float(14100), float(14200)] {
+			}
+
+			match_one green_urban_codes {
 				return #lime;
-			} // Green urban areas / Sports and leisure facilities
+			}
+
 			match_one [float(12210), float(12220), float(12230)] {
 				return #grey;
-			} // Roads / Rails
-			match_one [float(21000), float(22000), float(23000), float(24000), float(25000)] {
+			}
+
+			match_one agricultural_codes {
 				return #yellow;
-			} // Arable lands / Permanent crops / Pastures / Mixed cultivations / Orchards
-			match_one [float(31000), float(32000), float(33000)] {
+			}
+
+			match_one natural_codes {
 				return #green;
-			} // Forests / Herbaceous vegetation / Open spaces
+			}
+
 			default {
 				return #darkgrey;
-			} // default for unmatched values
+			}
+
 		}
 
 	}
 
-	//Distance from the road
-	float dist_route <- 0.0;
-	//Distance from the city center
-	float dist_cv <- 0.0;
-	//Constructability of the plot
-	float constructability;
+	action compute_transition {
+		transitioned_this_cycle <- false;
+		// Only consider non-urban, non-road cells for transition
+		list<plot> my_neighbors <- (self neighbors_at neighborhood_radius);
 
-	//Action to compute all the distances for the cell
-	action compute_distances {
-		roads route_pp <- roads closest_to self;
-		dist_route <- (self distance_to route_pp) using topology(world);
-		dist_cv <- dist_route + route_pp.dist_cv;
-	}
-	//Action to build on the cell
-	action build {
-		grid_value <- 1.0;
-		color <- plot_colors[1];
-	}
-	//Action to compute the constructability of the plot cell
-	float compute_constructability {
-	//Get all the neighbours plots
-		list<plot> voisins <- (self neighbors_at density_radius);
-		//Compute the density of all the neighbours plots
-		float densite <- (voisins count (each.grid_value = 1.0)) / length(voisins);
-		return (densite * weight_density + dist_route * weight_road_dist + dist_cv * weight_cc_dist) / (weight_density + weight_road_dist + weight_cc_dist);
+		// Calculate urban pressure from neighbors
+		float urban_neighbors <- length(my_neighbors where (each.grid_value in urban_codes)) / length(my_neighbors);
+		//		float road_influence <- 0.0;
+		//		if (urban_neighbors > 0) {
+		//			float min_road_dist <- self distance_to (roads closest_to self);
+		//			road_influence <- exp(-min_road_dist / road_influence_distance);
+		//		}
+
+		// Combine factors for transition probability
+		//		transition_probability <- (urban_neighbors * 0.6 + road_influence * 0.4);
+		transition_probability <- (urban_neighbors * 0.6);
+		// Apply transition based on probability
+		if flip(transition_probability) {
+			grid_value <- 11100.0; // Convert to urban
+			color <- get_color(grid_value);
+			transitioned_this_cycle <- true;
+		}
+
 	}
 
 }
 
 experiment raster type: gui {
-	parameter "Weight of the density criteria" var: weight_density;
-	parameter "Weight of the distance to roads criteria" var: weight_road_dist;
-	parameter "Weight of the distance to city center criteria" var: weight_cc_dist;
+	parameter "Urban expansion rate" var: urban_expansion_rate min: 0.0 max: 0.2 step: 0.01;
+	parameter "Road influence distance" var: road_influence_distance min: 50.0 max: 500.0 step: 50.0;
+	parameter "Neighborhood radius" var: neighborhood_radius min: 1 max: 5 step: 1;
 	output {
 		display map type: 3d axes: false antialias: false {
 			grid plot;
 			species roads;
-			species city_center;
 		}
 
+		display "Land Use Statistics" type: 2d {
+			chart "Land Use Distribution" type: pie {
+				data "Urban" value: urban_cells color: #red;
+				data "Green Spaces" value: green_cells color: #lime;
+				data "Agricultural" value: agricultural_cells color: #yellow;
+				data "Natural" value: natural_cells color: #green;
+			}
+
+		}
+
+		display "Transition Dynamics" type: 2d {
+			chart "Urban Transitions per Cycle" type: series {
+				data "New Urban Areas" value: cycle_urban_transitions color: #red;
+			}
+
+		}
+
+		monitor "Urban Areas (%)" value: (urban_cells / length(plot)) * 100;
+		monitor "Green Areas (%)" value: (green_cells / length(plot)) * 100;
+		monitor "Agricultural Areas (%)" value: (agricultural_cells / length(plot)) * 100;
+		monitor "Natural Areas (%)" value: (natural_cells / length(plot)) * 100;
 	}
 
 }
