@@ -46,7 +46,7 @@ Classes implemented in simulation from the dataset codes:
 
 ## Snapshot
 
-![snapshot_time_step_0_30m_res](snapshots/LyonUrbanGrowth_model_display_map_cycle_0_time_1737039272231.png)
+![snapshot_time_step_0_30m_res](snapshots/LyonUrbanGrowth_model_display_map_cycle_1_time_1737564473028.png)
 
 ## GAMA Model Structure
 
