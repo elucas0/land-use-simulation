@@ -4,14 +4,14 @@ Agent-based model simulating urban growth patterns in Lyon using Copernicus Urba
 
 ## Data Source
 
-- **Land Use Data**: [Urban Atlas 2012 & 2018](https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2018) (Copernicus Land Monitoring Service)
+- **Land Use Data**: [Urban Atlas 2018](https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2018) (Copernicus Land Monitoring Service)
 
 ## Preprocessed Datasets
 
-`/includes/urban_growth/2012/`
-- `Lyon_rasterized_100m_2012.asc` - Rasterized land use (100m resolution)
-- `Lyon_rasterized_30m_2012.asc` - Rasterized land use (30m resolution, very slow to load)
-- `Lyon_2012_Roads_Rivers_Simplified.shp` - Simplified transportation network
+`/includes/urban_growth/2018/`
+
+- `Full_Lyon_rasterized_100m_2018.asc` - Rasterized land use (100m resolution)
+- `Full_Lyon_2018_roads_simplified.shp` - Simplified transportation network
 
 ### Land Use Classes
 
@@ -22,27 +22,27 @@ Classes implemented in simulation from the dataset codes:
 - `14100`, `14200`: Green urban areas
 - `21000`, `22000`, `23000`, `24000`, `25000`: Arable lands, permanent crops, pastures, mixed cultivations, orchards
 - `31000`, `32000`, `33000`: Forests, herbaceous vegetation, open spaces
-- `0`: Empty/Available for development
+- `12210`, `12220`, `12230`: Transit infrastructure
 
 ## Data Preprocessing Steps
 
 1. **Land Use Data**:
-   ```
-   1. Download Urban Atlas 2012 data for Lyon
-   2. Convert vector to raster (100m or 30m resolution)
-      - Tool: QGIS Rasterize (Vector to Raster)
-      - Burn value: Land use code
-      - Output format: ASCII grid (.asc)
-   ```
 
+- Download Urban Atlas 2018 data for Lyon
+- Convert vector to raster (100m resolution)
+- Tool: QGIS Rasterize (Vector to Raster)
+- Burn value: Land use code
+- Output format: ASCII grid (.asc)
+- Copy into the `include` folder of the GAMA Workspace
+  
 2. **Transportation Network**:
-   ```
-   1. Extract roads by filtering class atribute from Urban Atlas data
-   2. Simplify geometry
-      - Tool: QGIS Simplify
-      - Tolerance: 100m
-   3. Export as shapefile
-   ```
+
+- Extract roads by filtering class attribute from Urban Atlas data
+- Simplify geometry
+- Tool: QGIS Simplify
+- Tolerance: 100m
+- Export as shapefile
+- Copy into the `include` folder of the GAMA Workspace
 
 ## Snapshot
 
@@ -51,9 +51,8 @@ Classes implemented in simulation from the dataset codes:
 ## GAMA Model Structure
 
 - Agents:
-  - Plots (grid cells)
-  - Roads network
-  - City center
+- Plots (grid cells)
+- Roads network
 
 ## Usage
 
@@ -63,29 +62,19 @@ Classes implemented in simulation from the dataset codes:
 4. Open `LyonUrbanGrowth.gaml`
 5. Run experiment "raster"
 
-## Scenarios [WIP]
+## Scenarios
 
-- Base scenario: Current growth patterns
-- No regulation: Unrestricted development
-- Controlled growth: Protected green spaces
-- Balanced growth: Moderate expansion
-
-## Validation [WIP]
-
-Compare simulated results with Urban Atlas 2018 data using:
-- Mean absolute error
-- Land use transition matrices
-- Temporal consistency checks
+- **Unrestricted Urban Growth**: Low requirements for urban growth, high for green areas.
+- **Controlled Urban Growth**: High requirements for urban growth, easier to maintain agricultural and natural areas.
+- **Balanced Growth**: Medium requirements for all land use types.
+- **Promote Green Areas**: Higher requirements for urban growth, very low for green areas.
 
 ## Project Structure
 
-```
 ├── includes/
 │   └── urban_growth/
-│       └── 2012/
-│           ├── Lyon_rasterized_100m_2012.asc
-│           ├── Lyon_2012_Roads_Rivers_Simplified.shp
-│           └── city center.shp
+│       └── 2018/
+│           ├── Full_Lyon_rasterized_100m_2018.asc
+│           ├── Full_Lyon_2018_roads_simplified.shp
 └── models/
-    └── LyonUrbanGrowth.gaml
-```
+└── LyonUrbanGrowth.gaml
