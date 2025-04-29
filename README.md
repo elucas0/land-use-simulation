@@ -1,80 +1,86 @@
-# Urban Growth Simulation - Lyon
+# Spatial Simulation Projects  
 
-Agent-based model simulating urban growth patterns in Lyon using Copernicus Urban Atlas data.
+This repository contains various agent-based models and simulations developed during the Spatial Simulation course of the Copernicus master's degree. Each project explores different aspects of spatial dynamics, ranging from urban growth to ecosystem interactions.  
 
-## Data Source
+## Table of Contents  
 
-- **Land Use Data**: [Urban Atlas 2018](https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2018) (Copernicus Land Monitoring Service)
+1. [Urban Growth Simulation - Lyon](#urban-growth-simulation---lyon)  
+2. [Savanna Ecosystem Simulation](#savanna-ecosystem-simulation)  
+3. [Grazing Cows Simulation](#grazing-cows-simulation)  
 
-## Preprocessed Datasets
+---
 
-`/includes/urban_growth/2018/`
+## Urban Growth Simulation - Lyon  
 
-- `Full_Lyon_rasterized_100m_2018.asc` - Rasterized land use (100m resolution)
-- `Full_Lyon_2018_roads_simplified.shp` - Simplified transportation network
+### Description  
 
-### Land Use Classes
+This agent-based model simulates urban growth patterns in Lyon using Copernicus Urban Atlas data. It incorporates land-use transitions, cluster-based growth, and Markov chain matrices to explore different urban growth scenarios.  
 
-Classes implemented in simulation from the dataset codes:
+### Features  
 
-- `11100`, `11210`, `11220`, `11230`, `11240`: Urban areas of diverse density
-- `12100`: Industrial, commercial, public, military and private units
-- `14100`, `14200`: Green urban areas
-- `21000`, `22000`, `23000`, `24000`, `25000`: Arable lands, permanent crops, pastures, mixed cultivations, orchards
-- `31000`, `32000`, `33000`: Forests, herbaceous vegetation, open spaces
-- `12210`, `12220`, `12230`: Transit infrastructure
+- Land-use transitions based on predefined probabilities.  
+- Scenarios: Unrestricted Urban Growth, Controlled Urban Growth, Balanced Growth, Promote Green Areas.  
+- Visualization of land-use dynamics and transition statistics.  
 
-## Data Preprocessing Steps
+### Data  
 
-1. **Land Use Data**:
+- **Land Use Data**: Urban Atlas 2018 (100m resolution raster).  
 
-- Download Urban Atlas 2018 data for Lyon
-- Convert vector to raster (100m resolution)
-- Tool: QGIS Rasterize (Vector to Raster)
-- Burn value: Land use code
-- Output format: ASCII grid (.asc)
-- Copy into the `include` folder of the GAMA Workspace
-  
-2. **Transportation Network**:
+### Usage  
 
-- Extract roads by filtering class attribute from Urban Atlas data
-- Simplify geometry
-- Tool: QGIS Simplify
-- Tolerance: 100m
-- Export as shapefile
-- Copy into the `include` folder of the GAMA Workspace
+1. Place datasets in the `/includes/` folder.  
+2. Open `LyonUrbanGrowth.gaml` in GAMA.  
+3. Run the `raster` experiment.  
 
-## Snapshot
+For more details, see the [README](./land-use-simulation/README.md).  
 
-![snapshot_time_step_0_30m_res](snapshots/LyonUrbanGrowth_model_display_map_cycle_1_time_1737564473028.png)
+---
 
-## GAMA Model Structure
+## Savanna Ecosystem Simulation  
 
-- Agents:
-- Plots (grid cells)
-- Roads network
+### Description  
 
-## Usage
+This model simulates predator-prey interactions in a savanna ecosystem, focusing on lions and zebras. It includes demographic tracking and age-based visualization for lions.  
 
-1. Install GAMA Platform
-2. Clone repository
-3. Place datasets in `/includes/`
-4. Open `LyonUrbanGrowth.gaml`
-5. Run experiment "raster"
+### Features  
 
-## Scenarios
+- Real-time tracking of lion population demographics.  
+- Adaptive coloring of lions based on age.  
+- Predator-prey dynamics with grazing zebras and aging lions.  
 
-- **Unrestricted Urban Growth**: Low requirements for urban growth, high for green areas.
-- **Controlled Urban Growth**: High requirements for urban growth, easier to maintain agricultural and natural areas.
-- **Balanced Growth**: Medium requirements for all land use types.
-- **Promote Green Areas**: Higher requirements for urban growth, very low for green areas.
+### Key Additions  
 
-## Project Structure
+- **Demographic Tracking**: Centralized age list for lions.  
+- **Population Monitoring**: Reflexes to report age statistics.  
+- **Visual Representation**: Color changes from yellow (young) to red (old).  
 
-├── includes/
-│   └── urban_growth/
-│       └── 2018/
-│           ├── Full_Lyon_rasterized_100m_2018.asc
-│           ├── Full_Lyon_2018_roads_simplified.shp
-└── models/
-└── LyonUrbanGrowth.gaml
+For more details, see the [README](./savana-ecosystem/README.md).  
+
+---
+
+## Grazing Cows Simulation  
+
+### Description  
+
+This model simulates the grazing behavior of cows on the Vierkaser pasture. It incorporates spatial dynamics of grass regrowth and cow movement.  
+
+### Features  
+
+- Grass regrowth based on location-specific biomass limits.  
+- Cows move to the best grazing spots within their action radius.  
+- Dynamic interaction between cows and grass biomass.  
+
+### Usage  
+
+1. Load GIS data for pasture areas.  
+2. Run the simulation to observe grazing patterns and grass regrowth.  
+
+For more details, see the [README](./grazing-cows/README.md).  
+
+---
+
+## Conclusion  
+
+These projects demonstrate the versatility of agent-based modeling in simulating complex spatial dynamics. Each model provides insights into different systems, from urban development to ecological interactions.  
+
+Feel free to explore the individual project folders for more details and instructions.  
